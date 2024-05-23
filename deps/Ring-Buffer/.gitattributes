@@ -1,0 +1,13 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+*.zip binary
+*.exe binary
+*.lib binary
+*.bin binary
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+
+*.pdf diff=astextplain
