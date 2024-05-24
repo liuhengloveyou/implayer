@@ -15,3 +15,7 @@ cmake -S . -B build
 ```
 cmake --build build
 ```
+
+本地编译，用事件可以吗？
+不用线程显示视频？
+多线程听声音？推声音？

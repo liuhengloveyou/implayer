@@ -44,7 +44,7 @@ namespace implayer
     {
       if (eof.load())
       {
-        SDL_Delay(100);
+        SDL_Delay(10);
         continue;
       }
 
@@ -87,18 +87,18 @@ namespace implayer
       }
       else if (state == PlayState::kPaused)
       {
-        SDL_Delay(100);
+        SDL_Delay(10);
         // wait_event_.wait(-1);
       }
       else if (state == PlayState::kStopped)
       {
         video_frame_queue_->flush();
         audio_frame_queue_->flush();
-        SDL_Delay(100);
+        SDL_Delay(10);
       }
       else if (state == PlayState::kIdle)
       {
-        SDL_Delay(100);
+        SDL_Delay(10);
       }
     }
   }

@@ -2,7 +2,7 @@
 #include "source/simple_source.h"
 #include "output/sdl2_audio_output.h"
 #include "output/sdl2_video_output.h"
-#include "output/imgui_sdl2_output.h"
+#include "output/imgui_sdl2_video_output.h"
 #include "ffmpeg/ffmpeg_codec.h"
 #include "ffmpeg/ffmpeg_demuxer.h"
 #include "ffmpeg/ffmpeg_headers.h"

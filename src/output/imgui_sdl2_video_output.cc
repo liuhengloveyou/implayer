@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #ifdef __EMSCRIPTEN__
 #include <pthread.h>
@@ -15,8 +15,10 @@
 using namespace emscripten;
 #endif
 
+#include "core/frame.h"
 #include "core/i_player.h"
 #include "output/imgui_sdl2_video_output.h"
+#include "utils/time_utils.h"
 
 #if !SDL_VERSION_ATLEAST(2, 0, 17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -72,6 +74,8 @@ namespace implayer
   int IMSDL2Output::play()
   {
     run();
+
+    return 0;
   }
 
   void IMSDL2Output::run()
@@ -121,6 +125,7 @@ namespace implayer
 #endif
     {
       onEvent();
+      auto t1 = getTimestamp();
 
       // Start the Dear ImGui frame
       ImGui_ImplSDLRenderer2_NewFrame();
@@ -151,8 +156,11 @@ namespace implayer
       SDL_RenderSetScale(m_sdlRender, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
       SDL_SetRenderDrawColor(m_sdlRender, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
       SDL_RenderClear(m_sdlRender);
-      ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_sdlRender);
+
       render();
+      auto t2 = getTimestamp();
+      // printf(">>>>>>>>>>>>>>>>>>>>>%lld\n", t2 - t1);
+      ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_sdlRender);
       SDL_RenderPresent(m_sdlRender);
     }
 #ifdef __EMSCRIPTEN__
@@ -172,8 +180,8 @@ namespace implayer
   void IMSDL2Output::onEvent()
   {
     SDL_Event event;
-    // while (SDL_PollEvent(&event))
-    while (SDL_WaitEventTimeout(&event, 20))
+    while (SDL_PollEvent(&event))
+    // while (SDL_WaitEventTimeout(&event, 20))
     {
 
       ImGui_ImplSDL2_ProcessEvent(&event);
@@ -207,9 +215,21 @@ namespace implayer
 
   void IMSDL2Output::render()
   {
+    PlayState state = player_->state();
+    if (state != PlayState::kPlaying)
+    {
+      return;
+    }
+
+    auto frame = player_->dequeueVideoFrame();
+    if (frame == nullptr)
+    {
+      return;
+    }
+
+    frame_for_draw_ = convertFrame(frame);
     if (frame_for_draw_ != nullptr)
     {
-      printf("IMSDL2Output::render\n");
 
       AVFrame *pict = frame_for_draw_->f;
       SDL_UpdateYUVTexture(m_sdlTexture, nullptr,
@@ -227,22 +247,24 @@ namespace implayer
                                    // be stretched to fill the given rectangle
       );
       // SDL_RenderPresent(m_sdlRender);
+      // doAVSync(frame_for_draw_->pts_d());
     }
   }
 
   int IMSDL2Output::updateFrame(FrameSharedPtr frame)
   {
-    printf("IMSDL2Output::updateFrame\n");
-    FrameEvent *data = new FrameEvent{};
-    data->frame = frame;
+    return -1;
 
-    SDL_Event event{
-      type : SDL_EVENT_REFRESH,
-    };
-    event.user.data1 = data;
-    SDL_PushEvent(&event);
+    // printf("IMSDL2Output::updateFrame\n");
+    // FrameEvent *data = new FrameEvent{};
+    // data->frame = frame;
 
-    return 0;
+    // SDL_Event event;
+    // event.type = SDL_EVENT_REFRESH;
+    // event.user.data1 = data;
+    // SDL_PushEvent(&event);
+
+    // return 0;
 
     // AVFrame *pict = frame->f;
     // SDL_UpdateYUVTexture(m_sdlTexture, nullptr,

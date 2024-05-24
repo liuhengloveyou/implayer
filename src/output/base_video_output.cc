@@ -57,23 +57,27 @@ namespace implayer
         auto frame = player_->dequeueVideoFrame();
         if (frame == nullptr)
         {
-          SDL_Delay(100);
+          SDL_Delay(10);
           continue;
         }
 
         std::shared_ptr<Frame> frame_for_draw = convertFrame(frame);
         if (frame_for_draw != nullptr)
         {
-          updateFrame(frame_for_draw);
+          if (updateFrame(frame_for_draw) < 0) {
+            break;
+          }
           doAVSync(frame_for_draw->pts_d());
         }
       }
       else if (state == PlayState::kStopped || state == PlayState::kIdle || state == PlayState::kPaused)
       {
-        SDL_Delay(100);
+        SDL_Delay(10);
         continue;
       }
     }
+
+    m_thread_stop = true;
   }
 
   std::shared_ptr<Frame> BaseVideoOutput::convertFrame(std::shared_ptr<Frame> frame)

@@ -18,6 +18,7 @@ endif ()
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/deps/imgui)
 set(FFMPEG_DIR ${CMAKE_SOURCE_DIR}/../ffmpeg-6.1.1-full_build-shared)
 
 ########### 三方依赖库 ############
@@ -53,6 +54,14 @@ set(SOURCES
         ${SOURCE_DIR}/output/sdl2_video_output.cc
         ${SOURCE_DIR}/output/sdl2_audio_output.cc
         ${SOURCE_DIR}/output/sdl2_video_output.cc
+        ${SOURCE_DIR}/output/imgui_sdl2_video_output.cc
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer2.cpp
 )
 
 set(INCLUDES
@@ -61,6 +70,8 @@ set(INCLUDES
         ${CMAKE_SOURCE_DIR}/src
         ${SOURCE_DIR}
         ${FFMPEG_DIR}/include
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends 
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

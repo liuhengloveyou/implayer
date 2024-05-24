@@ -66,4 +66,4 @@ namespace implayer
   };
 } // namespace implayer
 
-#endif // FFMPEG_VIDEO_PLAYER_CLOCK_MANAGER_H
+#endif

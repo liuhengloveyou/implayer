@@ -4,7 +4,6 @@ static void *ThreadEntry(void *arg)
 {
     ThreadBase *th = (ThreadBase *)arg;
     th->threadMain();
-
     return NULL;
 }
 
