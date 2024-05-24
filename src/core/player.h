@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <memory>
+#include <thread>
 
 #include "output/i_video_output.h"
 #include "output/i_audio_output.h"

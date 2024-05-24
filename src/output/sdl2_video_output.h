@@ -18,7 +18,7 @@ namespace implayer
 
   public:
     int prepare(const MediaFileInfo &media_info, const VideoOutputParameters &parameters) override;
-    int drawFrame(std::shared_ptr<Frame> frame) override;
+    int updateFrame(std::shared_ptr<Frame> frame) override;
 
   private:
     int initSDL2System(const VideoOutputParameters &parameters);

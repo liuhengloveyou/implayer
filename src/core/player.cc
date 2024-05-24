@@ -2,11 +2,12 @@
 #include "source/simple_source.h"
 #include "output/sdl2_audio_output.h"
 #include "output/sdl2_video_output.h"
+#include "output/imgui_sdl2_output.h"
 #include "ffmpeg/ffmpeg_codec.h"
 #include "ffmpeg/ffmpeg_demuxer.h"
 #include "ffmpeg/ffmpeg_headers.h"
 #include "ffmpeg/ffmpeg_decoder_context.h"
-#include "player.h"
+#include "core/player.h"
 
 namespace implayer
 {
@@ -41,7 +42,7 @@ namespace implayer
     audio_output_param.channels = media_file_info_.channels == 1 ? 1 : 2;
     audio_output_param.num_frames_of_buffer = 1024;
 
-    video_output_ = std::make_shared<SDL2VideoOutput>(player);
+    video_output_ = std::make_shared<IMSDL2Output>(player);
     audio_output_ = std::make_shared<SDL2AudioOutput>(player);
     ret = prepareForOutput(media_file_info_, video_output_param, audio_output_param);
     fprintf(stdout, "prepare player: %d\n", ret);
@@ -61,6 +62,10 @@ namespace implayer
       ret |= audio_output_->play();
     }
 
+    if (video_output_)
+    {
+      ret |= video_output_->play();
+    }
     if (ret != 0)
     {
       LOGE("play failed, exit");
@@ -68,7 +73,7 @@ namespace implayer
     }
 
     printf("IMplayer::play\n");
-    
+
     return 0;
   }
 

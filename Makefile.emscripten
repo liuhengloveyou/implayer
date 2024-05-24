@@ -17,7 +17,8 @@ SOURCES = src/main.cc \
         src/output/base_video_output.cc \
         src/output/base_audio_output.cc \
         src/output/sdl2_video_output.cc \
-        src/output/sdl2_audio_output.cc
+        src/output/sdl2_audio_output.cc \
+		src/output/imgui_sdl2_video_output.cc
 
 SOURCES += $(IMGUI_DIR)/imgui.cpp \
 		$(IMGUI_DIR)/imgui_demo.cpp \

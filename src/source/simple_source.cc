@@ -28,8 +28,6 @@ namespace implayer
       audio_frame_queue_ = nullptr;
     }
 
-    // wait_event_.signal();
-
     decoder_ = nullptr;
   };
 
@@ -37,9 +35,7 @@ namespace implayer
   {
     startThread();
 
-    int ret = decoder_->open(file_path);
-
-    return ret;
+    return decoder_->open(file_path);
   }
 
   void SimpleSource::threadMain()
@@ -53,7 +49,7 @@ namespace implayer
       }
 
       PlayState state = player_->state();
-      fprintf(stdout, "SimpleSource::threadMain:: %d %d %d\n", state, video_frame_queue_->size(), audio_frame_queue_->size());
+      // fprintf(stdout, "SimpleSource::threadMain:: %d %d %d\n", state, video_frame_queue_->size(), audio_frame_queue_->size());
       if (state == PlayState::kPlaying)
       {
         auto frame = decoder_->decodeNextFrame();

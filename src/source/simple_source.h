@@ -13,7 +13,7 @@
 namespace implayer
 {
   using QueueType = WaitableQueue<std::shared_ptr<Frame>>;
-  constexpr int QueueSize = 3;
+  constexpr int QueueSize = 10;
 
   class SimpleSource : public ISource, public ThreadBase
   {

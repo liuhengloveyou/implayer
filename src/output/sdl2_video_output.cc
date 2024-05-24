@@ -38,7 +38,7 @@ namespace implayer
     ret = initSDL2System(parameters);
     printf("initSDL2System: %d\n", ret);
 
-    return 0;
+    return ret;
   }
 
   int SDL2VideoOutput::initSDL2System(const VideoOutputParameters &parameters)
@@ -90,7 +90,7 @@ namespace implayer
     return 0;
   }
 
-  int SDL2VideoOutput::drawFrame(std::shared_ptr<Frame> frame)
+  int SDL2VideoOutput::updateFrame(std::shared_ptr<Frame> frame)
   {
     AVFrame *pict = frame->f;
     SDL_UpdateYUVTexture(texture_, nullptr,

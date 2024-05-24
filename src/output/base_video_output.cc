@@ -64,7 +64,7 @@ namespace implayer
         std::shared_ptr<Frame> frame_for_draw = convertFrame(frame);
         if (frame_for_draw != nullptr)
         {
-          drawFrame(frame_for_draw);
+          updateFrame(frame_for_draw);
           doAVSync(frame_for_draw->pts_d());
         }
       }

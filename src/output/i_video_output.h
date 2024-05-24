@@ -20,6 +20,7 @@ namespace implayer
   {
   public:
     virtual int prepare(const MediaFileInfo &media_info, const VideoOutputParameters &parameters) = 0;
+    virtual int play() = 0;
   };
 
 } // namespace implayer

@@ -55,6 +55,12 @@ namespace implayer
     AVMediaType media_type;
   };
 
+  typedef struct FrameEvent
+  {
+    std::shared_ptr<Frame> frame;
+  } FrameEvent;
+
+  using FrameSharedPtr = std::shared_ptr<Frame>;
 } // namespace implayer
 
 #endif // IMPLAYER_FRAME_H
