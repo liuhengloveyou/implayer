@@ -67,6 +67,8 @@ namespace implayer
       return -1;
     }
 
+    printf("IMplayer::play\n");
+    
     return 0;
   }
 

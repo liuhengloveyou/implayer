@@ -1,0 +1,119 @@
+CC = emcc
+CXX = em++
+CPPFLAGS =
+LDFLAGS = -lembind -lworkerfs.js -lwebsocket.js 
+EMS = -std=c++11 -O2 -pthread
+
+WEB_DIR = web
+EXE = $(WEB_DIR)/index.html
+IMGUI_DIR = deps/imgui
+FFMPEG_DIR = /opt/dev/ffmpeg/ffmpeg-emcc-6.1.1
+
+SOURCES = src/main.cc \
+        src/core/player.cc \
+        src/utils/thread_base.cc \
+        src/source/ffmpeg_decoder.cc \
+        src/source/simple_source.cc \
+        src/output/base_video_output.cc \
+        src/output/base_audio_output.cc \
+        src/output/sdl2_video_output.cc \
+        src/output/sdl2_audio_output.cc
+
+SOURCES += $(IMGUI_DIR)/imgui.cpp \
+		$(IMGUI_DIR)/imgui_demo.cpp \
+		$(IMGUI_DIR)/imgui_draw.cpp \
+		$(IMGUI_DIR)/imgui_tables.cpp \
+		$(IMGUI_DIR)/imgui_widgets.cpp \
+		$(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp \
+		$(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
+
+LIBS = -L$(FFMPEG_DIR)/lib -lavcodec -lavformat -lavutil -lswscale -lswresample 
+OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
+UNAME_S := $(shell uname -s)
+
+##---------------------------------------------------------------------
+## EMSCRIPTEN OPTIONS
+##---------------------------------------------------------------------
+
+# ("EMS" options gets added to both CPPFLAGS and LDFLAGS, whereas some options are for linker only)
+EMS += -s USE_SDL=2
+# EMS += -s DISABLE_EXCEPTION_CATCHING=1
+LDFLAGS += -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=1
+LDFLAGS +=  -sPTHREAD_POOL_SIZE=8
+LDFLAGS += -s INITIAL_MEMORY=512MB -s TOTAL_MEMORY=2048MB -s ALLOW_MEMORY_GROWTH=1
+
+# Uncomment next line to fix possible rendering bugs with Emscripten version older then 1.39.0 (https://github.com/ocornut/imgui/issues/2877)
+#EMS += -s BINARYEN_TRAP_MODE=clamp
+#EMS += -s SAFE_HEAP=1    ## Adds overhead
+
+# Emscripten allows preloading a file or folder to be accessible at runtime.
+# The Makefile for this example project suggests embedding the misc/fonts/ folder into our application, it will then be accessible as "/fonts"
+# See documentation for more details: https://emscripten.org/docs/porting/files/packaging_files.html
+# (Default value is 0. Set to 1 to enable file-system and include the misc/fonts/ folder as part of the build.)
+USE_FILE_SYSTEM ?= 1
+ifeq ($(USE_FILE_SYSTEM), 0)
+LDFLAGS += -s NO_FILESYSTEM=1
+CPPFLAGS += -DIMGUI_DISABLE_FILE_FUNCTIONS
+endif
+ifeq ($(USE_FILE_SYSTEM), 1)
+LDFLAGS += --no-heap-copy 
+LDFLAGS += --preload-file assets/input.mp4@/input.mp4
+#LDFLAGS += --preload-file ../../misc/fonts@/fonts
+endif
+
+##---------------------------------------------------------------------
+## FINAL BUILD FLAGS
+##---------------------------------------------------------------------
+
+CPPFLAGS += -I. -I./src/ -I./deps
+CPPFLAGS += -I$(IMGUI_DIR) 
+CPPFLAGS += -I$(IMGUI_DIR)/backends 
+CPPFLAGS += -I$(FFMPEG_DIR)/include
+
+# CPPFLAGS += -gsource-map -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=1
+CPPFLAGS += -Wall -Wformat -Os $(EMS)
+LDFLAGS += --shell-file emscripten/shell_minimal.html
+LDFLAGS += $(EMS)
+
+##---------------------------------------------------------------------
+## BUILD RULES
+##---------------------------------------------------------------------
+
+%.o:src/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:src/core/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:src/utils/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:src/ffmpeg/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:src/source/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	
+%.o:src/output/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(IMGUI_DIR)/%.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+all: $(EXE)
+	@echo Build complete for $(EXE)
+
+$(WEB_DIR):
+	mkdir $@
+
+serve: all
+	python3 -m http.server -d $(WEB_DIR)
+
+$(EXE): $(OBJS) $(WEB_DIR)
+	$(CXX) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+
+clean:
+	rm -rf $(OBJS) $(WEB_DIR)

@@ -19,12 +19,12 @@ public:
 
   size_t capacity() const { return queue_size_; }
   size_t size() const {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     return que_.size();
   }
 
   bool tryPush(AVFrame *pkt) {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (que_.size() >= queue_size_) {
       return false;
     }
@@ -44,7 +44,7 @@ public:
   }
 
   AVFrame *tryPop() {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (!que_.empty()) {
       auto *return_pkt = que_.front();
       que_.pop();
@@ -64,7 +64,7 @@ public:
   }
 
   void clear() {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
 
     for (; !que_.empty();) {
       auto *pkt = que_.front();
@@ -79,7 +79,7 @@ public:
 
   AVFrame *front() {
     // TODO: fix this if queue stuck on waitAndPush
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (!que_.empty()) {
       return que_.front();
     } else {

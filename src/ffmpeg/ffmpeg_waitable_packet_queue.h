@@ -24,12 +24,12 @@ public:
 
   size_t capacity() const { return queue_size_; }
   size_t size() const {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     return packet_que_.size();
   }
 
   bool tryPush(AVPacket *pkt) {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (packet_que_.size() >= queue_size_) {
       return false;
     }
@@ -52,7 +52,7 @@ public:
   }
 
   AVPacket *tryPop() {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (!packet_que_.empty()) {
       auto *return_pkt = packet_que_.front();
       packet_que_.pop();
@@ -74,7 +74,7 @@ public:
   }
 
   void clear() {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
 
     for (; !packet_que_.empty();) {
       auto *pkt = packet_que_.front();

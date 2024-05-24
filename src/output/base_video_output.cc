@@ -1,6 +1,7 @@
 
 #include "output/base_video_output.h"
 
+#include <thread>
 #include <SDL.h>
 
 namespace implayer

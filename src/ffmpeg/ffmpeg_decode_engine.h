@@ -114,7 +114,7 @@ public:
 
   void seek(double target_pos) {
     if (!seek_req_) {
-      std::lock_guard lg(seek_mut_);
+      std::lock_guard<std::mutex> lg(seek_mut_);
       auto pos = target_pos;
       if (pos < 0) {
         pos = 0;
@@ -393,7 +393,7 @@ private:
     int64_t seek_rel = 0;
     int seek_flags = 0;
     {
-      std::lock_guard lg(seek_mut_);
+      std::lock_guard<std::mutex> lg(seek_mut_);
       seek_pos = seek_pos_;
       seek_rel = seek_rel_;
       seek_flags = seek_flags_;

@@ -8,8 +8,8 @@ namespace implayer
   SimpleSource::SimpleSource(IMPlayerSharedPtr player)
       : player_(player),
         decoder_(std::make_shared<FFmpegAVDecoder>()),
-        video_frame_queue_(std::make_unique<QueueType>(QueueSize)),
-        audio_frame_queue_(std::make_unique<QueueType>(QueueSize))
+        video_frame_queue_(std::make_shared<QueueType>(QueueSize)),
+        audio_frame_queue_(std::make_shared<QueueType>(QueueSize))
   {
   }
 
@@ -20,10 +20,12 @@ namespace implayer
     if (video_frame_queue_)
     {
       video_frame_queue_->flush();
+      video_frame_queue_ = nullptr;
     }
     if (audio_frame_queue_)
     {
       audio_frame_queue_->flush();
+      audio_frame_queue_ = nullptr;
     }
 
     // wait_event_.signal();

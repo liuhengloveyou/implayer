@@ -40,8 +40,8 @@ namespace implayer
   private:
     IMPlayerSharedPtr player_;
     std::shared_ptr<IDecoder> decoder_;
-    std::unique_ptr<QueueType> video_frame_queue_ = nullptr;
-    std::unique_ptr<QueueType> audio_frame_queue_{nullptr};
+    std::shared_ptr<QueueType> video_frame_queue_ = nullptr;
+    std::shared_ptr<QueueType> audio_frame_queue_{nullptr};
 
     std::atomic<int64_t> seek_timestamp_{0};
     std::atomic<bool> eof{false};

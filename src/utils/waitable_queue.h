@@ -11,24 +11,24 @@ public:
   explicit WaitableQueue(size_t queue_size = INT16_MAX)
       : queue_size_(queue_size) {}
   bool empty() const {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     return q_.empty();
   }
 
   bool full() const {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     return q_.size() == queue_size_;
   }
 
   size_t capacity() const { return queue_size_; }
 
   size_t size() const {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     return q_.size();
   }
 
   void push(T new_value) {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (q_.size() >= queue_size_) {
       return;
     }
@@ -37,7 +37,7 @@ public:
   }
 
   bool try_push(T new_value) {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (q_.size() >= queue_size_) {
       return false;
     }
@@ -48,7 +48,7 @@ public:
   }
 
   bool try_pop(T &value) {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (q_.empty()) {
       return false;
     }
@@ -60,7 +60,7 @@ public:
   }
 
   std::shared_ptr<T> try_pop() {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     if (q_.empty()) {
       return std::shared_ptr<T>();
     }
@@ -95,7 +95,7 @@ public:
   }
 
   void flush() {
-    std::lock_guard lg(mut_);
+    std::lock_guard<std::mutex> lg(mut_);
     for (; !q_.empty();) {
       q_.pop();
     }

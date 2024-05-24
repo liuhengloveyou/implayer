@@ -2,6 +2,7 @@
 #define FFMPEG_VIDEO_PLAYER_FFMPEG_DECODER_CONTEXT_H
 
 #include <string>
+#include <memory>
 
 #include "utils/simple_fifo.h"
 #include "utils/waitable_queue.h"
@@ -61,7 +62,7 @@ namespace implayer
           max_frames_size);
       RETURN_IF_ERROR_LOG(ret, "Prepare audio resampler failed\n");
 
-      audio_sample_fifo = std::make_unique<AudioSampleFIFO>(SDL_AUDIO_BUFFER_SIZE * audio_codec_ctx->channels);
+      audio_sample_fifo = std::make_shared<AudioSampleFIFO>(SDL_AUDIO_BUFFER_SIZE * audio_codec_ctx->channels);
 
       return 0;
     }
@@ -98,7 +99,7 @@ namespace implayer
     FrameQueue video_frame_queue;
 
     using AudioSampleFIFO = SimpleFIFO<int16_t>;
-    std::unique_ptr<AudioSampleFIFO> audio_sample_fifo;
+    std::shared_ptr<AudioSampleFIFO> audio_sample_fifo;
   };
 
 } // namespace implayer

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <thread>
 #include <memory>
+#include <chrono>
 
 #ifdef __cplusplus
 extern "C"
@@ -17,58 +18,77 @@ extern "C"
 #include "core/player.h"
 
 using namespace implayer;
-using namespace std::chrono_literals;
+// using namespace std::chrono_literals;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+#ifdef __EMSCRIPTEN__
+  std::string in_file = "/input.mp4";
+#else
   std::string in_file = "D:/input.mp4";
+#endif
 
   IMPlayerSharedPtr player = std::make_shared<IMplayer>();
   int ret = player->open(player, in_file);
   printf("open player %d\n", ret);
-  
+
   player->play();
 
   SDL_Event event;
-  auto doSeekRelative = [&](float sec) {
+  auto doSeekRelative = [&](float sec)
+  {
     auto current_pos = player->getCurrentPosition();
     auto target_pos = current_pos + static_cast<int64_t>(sec * AV_TIME_BASE);
     LOGE("seek to %lf\n", double(target_pos) / AV_TIME_BASE);
     player->seek(target_pos);
   };
-  auto doPauseOrPlaying = [&]() {
+  auto doPauseOrPlaying = [&]()
+  {
     auto is_playing = player->state() == PlayState::kPlaying;
-    if (is_playing) {
+    if (is_playing)
+    {
       player->pause();
-    } else {
+    }
+    else
+    {
       player->play();
     }
   };
 
-  for (;;) {
+  for (;;)
+  {
     SDL_PollEvent(&event);
-    switch (event.type) {
-    case SDL_KEYDOWN: {
-      switch (event.key.keysym.sym) {
-      case SDLK_LEFT: {
+    switch (event.type)
+    {
+    case SDL_KEYDOWN:
+    {
+      switch (event.key.keysym.sym)
+      {
+      case SDLK_LEFT:
+      {
         doSeekRelative(-5.0);
         break;
       }
 
-      case SDLK_RIGHT: {
+      case SDLK_RIGHT:
+      {
         doSeekRelative(5.0);
         break;
       }
 
-      case SDLK_DOWN: {
+      case SDLK_DOWN:
+      {
         doSeekRelative(-60.0);
         break;
       }
 
-      case SDLK_UP: {
+      case SDLK_UP:
+      {
         doSeekRelative(60.0);
         break;
       }
-      case SDLK_SPACE: {
+      case SDLK_SPACE:
+      {
         doPauseOrPlaying();
         break;
       }
