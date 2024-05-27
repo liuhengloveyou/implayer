@@ -120,6 +120,27 @@ namespace implayer
     return 0;
   }
 
+  void IMplayer::doSeekRelative(float sec)
+  {
+    auto current_pos = getCurrentPosition();
+    auto target_pos = current_pos + static_cast<int64_t>(sec * AV_TIME_BASE);
+    LOGE("seek to %lf\n", double(target_pos) / AV_TIME_BASE);
+    seek(target_pos);
+  }
+
+  void IMplayer::doPauseOrPlaying()
+  {
+    auto is_playing = state() == PlayState::kPlaying;
+    if (is_playing)
+    {
+      pause();
+    }
+    else
+    {
+      play();
+    }
+  };
+
   int64_t IMplayer::getDuration() const
   {
     int64_t v_duration = 0;
@@ -142,16 +163,16 @@ namespace implayer
 
   int IMplayer::prepareForOutput(const MediaFileInfo &media_info, const VideoOutputParameters &v_out_params, const AudioOutputParameters &a_out_params)
   {
-    if (video_output_)
-    {
-      auto ret = video_output_->prepare(media_info, v_out_params);
-      printf("prepare video output: %d\n", ret);
-    }
-
     if (audio_output_)
     {
       auto ret = audio_output_->prepare(media_info, a_out_params);
       printf("prepare audio output: %d\n", ret);
+    }
+
+    if (video_output_)
+    {
+      auto ret = video_output_->prepare(media_info, v_out_params);
+      printf("prepare video output: %d\n", ret);
     }
 
     return 0;

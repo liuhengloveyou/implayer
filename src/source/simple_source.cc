@@ -1,5 +1,3 @@
-#include <SDL.h>
-
 #include "source/simple_source.h"
 #include "source/ffmpeg_decoder.h"
 
@@ -44,7 +42,7 @@ namespace implayer
     {
       if (eof.load())
       {
-        SDL_Delay(10);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         continue;
       }
 
@@ -87,18 +85,18 @@ namespace implayer
       }
       else if (state == PlayState::kPaused)
       {
-        SDL_Delay(10);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         // wait_event_.wait(-1);
       }
       else if (state == PlayState::kStopped)
       {
         video_frame_queue_->flush();
         audio_frame_queue_->flush();
-        SDL_Delay(10);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
       else if (state == PlayState::kIdle)
       {
-        SDL_Delay(10);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
     }
   }

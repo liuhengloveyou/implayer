@@ -28,6 +28,8 @@ namespace implayer
     virtual int pause() = 0;
     virtual PlayState state() = 0;
     virtual int64_t getCurrentPosition() = 0;
+    virtual void doPauseOrPlaying() = 0;
+    virtual void doSeekRelative(float sec) = 0;
 
     virtual void updateAudioClock(double pts) = 0;
     virtual void updateVideoClock(double pts) = 0;

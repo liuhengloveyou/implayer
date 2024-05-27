@@ -26,7 +26,7 @@ namespace implayer
     int stop() override;
     int seek(int64_t timestamp) override;
     int pause() override;
-    PlayState state() override { return state_; }
+    PlayState state() override { return state_.load(); }
     int64_t getCurrentPosition() override;
     std::shared_ptr<Frame> dequeueVideoFrame() override;
     std::shared_ptr<Frame> dequeueAudioFrame() override;
@@ -42,6 +42,8 @@ namespace implayer
     MediaFileInfo getMediaFileInfo();
     int prepareForOutput(const MediaFileInfo &media_file_info, const VideoOutputParameters &v_out_params, const AudioOutputParameters &a_out_params);
     int64_t getDuration() const;
+    void doPauseOrPlaying();
+    void doSeekRelative(float sec);
 
   private:
     std::shared_ptr<IVideoOutput> video_output_{nullptr};

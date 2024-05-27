@@ -55,6 +55,7 @@ namespace implayer
       if (state == PlayState::kPlaying)
       {
         auto frame = player_->dequeueVideoFrame();
+        printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>%d\n", frame == nullptr);
         if (frame == nullptr)
         {
           SDL_Delay(10);

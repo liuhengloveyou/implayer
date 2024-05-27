@@ -70,12 +70,13 @@ namespace implayer
     ret = InitImSDL2(parameters);
     printf("initSDL2System: %d\n", ret);
 
+    run();
+
     return ret;
   }
 
   int IMSDL2Output::play()
   {
-    run();
 
     return 0;
   }
@@ -87,7 +88,7 @@ namespace implayer
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -131,43 +132,41 @@ namespace implayer
       onEvent();
 
       // Start the Dear ImGui frame
-      // ImGui_ImplSDLRenderer2_NewFrame();
-      // ImGui_ImplSDL2_NewFrame();
-      // ImGui::NewFrame();
+      ImGui_ImplSDLRenderer2_NewFrame();
+      ImGui_ImplSDL2_NewFrame();
+      ImGui::NewFrame();
 
-      // // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-      // {
-      //   static float f = 0.0f;
-      //   static int counter = 0;
+      // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+      {
+        static float f = 0.0f;
+        static int counter = 0;
 
-      //   ImGui::Begin("Player");                           // Create a window called "Hello, world!" and append into it.
-      //   ImGui::Text("This is some useful text.");                // Display some text (you can use a format strings too)
-      //   ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-      //   ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
+        ImGui::Begin("Player");                                  // Create a window called "Hello, world!" and append into it.
+        ImGui::Text("This is some useful text.");                // Display some text (you can use a format strings too)
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
 
-      //   if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-      //     counter++;
-      //   ImGui::SameLine();
-      //   ImGui::Text("counter = %d", counter);
+        if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+          counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", counter);
 
-      //   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-      //   ImGui::End();
-      // }
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::End();
+      }
 
       // Rendering
-      // ImGui::Render();
+      ImGui::Render();
       SDL_RenderSetScale(m_sdlRender, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
       SDL_SetRenderDrawColor(m_sdlRender, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
       SDL_RenderClear(m_sdlRender);
-
       render();
-
       ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_sdlRender);
       SDL_RenderPresent(m_sdlRender);
 
-      auto t2 = getTimestamp();
-      printf(">>>>>>>>>>>>>>>>>>>>>%lld\n", t2 - t1);
-      t1 = t2;
+      // auto t2 = getTimestamp();
+      // printf(">>>>>>>>>>>>>>>>>>>>>%lld\n", t2 - t1);
+      // t1 = t2;
     }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
@@ -214,6 +213,43 @@ namespace implayer
       {
         onUpdateFrame(event.user.data1);
       }
+      case SDL_KEYDOWN:
+      {
+        switch (event.key.keysym.sym)
+        {
+        case SDLK_LEFT:
+        {
+          player_->doSeekRelative(-5.0);
+          break;
+        }
+
+        case SDLK_RIGHT:
+        {
+          player_->doSeekRelative(5.0);
+          break;
+        }
+
+        case SDLK_DOWN:
+        {
+          player_->doSeekRelative(-60.0);
+          break;
+        }
+
+        case SDLK_UP:
+        {
+          player_->doSeekRelative(60.0);
+          break;
+        }
+        case SDLK_SPACE:
+        {
+          player_->doPauseOrPlaying();
+          break;
+        }
+        default:
+          break;
+        }
+        break;
+      }
       break;
       }
     }
@@ -221,23 +257,8 @@ namespace implayer
 
   void IMSDL2Output::render()
   {
-    // PlayState state = player_->state();
-    // if (state != PlayState::kPlaying)
-    // {
-    //   return;
-    // }
-
-    // auto frame = player_->dequeueVideoFrame();
-    // if (frame == nullptr)
-    // {
-    //   return;
-    // }
-
-    // frame_for_draw_ = convertFrame(frame);
-    
     if (frame_for_draw_ != nullptr)
     {
-
       AVFrame *pict = frame_for_draw_->f;
       SDL_UpdateYUVTexture(m_sdlTexture, nullptr,
                            pict->data[0], pict->linesize[0],
@@ -254,7 +275,7 @@ namespace implayer
                                    // be stretched to fill the given rectangle
       );
       // SDL_RenderPresent(m_sdlRender);
-      doAVSync(frame_for_draw_->pts_d());
+      // doAVSync(frame_for_draw_->pts_d());
     }
   }
 
@@ -267,25 +288,6 @@ namespace implayer
     event.type = SDL_EVENT_REFRESH;
     event.user.data1 = data;
     SDL_PushEvent(&event);
-
-    return 0;
-
-    // AVFrame *pict = frame->f;
-    // SDL_UpdateYUVTexture(m_sdlTexture, nullptr,
-    //                      pict->data[0], pict->linesize[0],
-    //                      pict->data[1], pict->linesize[1],
-    //                      pict->data[2], pict->linesize[2]);
-
-    // SDL_RenderClear(m_sdlRender);
-    // SDL_RenderCopy(m_sdlRender,  // the rendering context
-    //                m_sdlTexture, // the source texture
-    //                NULL,         // the source SDL_Rect structure or NULL for the
-    //                              // entire texture
-    //                NULL          // the destination SDL_Rect structure or NULL for
-    //                              // the entire rendering target; the texture will
-    //                              // be stretched to fill the given rectangle
-    // );
-    // SDL_RenderPresent(m_sdlRender);
 
     return 0;
   }
