@@ -85,7 +85,7 @@ namespace implayer
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -128,40 +128,41 @@ namespace implayer
       auto t1 = getTimestamp();
 
       // Start the Dear ImGui frame
-      ImGui_ImplSDLRenderer2_NewFrame();
-      ImGui_ImplSDL2_NewFrame();
-      ImGui::NewFrame();
+      // ImGui_ImplSDLRenderer2_NewFrame();
+      // ImGui_ImplSDL2_NewFrame();
+      // ImGui::NewFrame();
 
-      // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-      {
-        static float f = 0.0f;
-        static int counter = 0;
+      // // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+      // {
+      //   static float f = 0.0f;
+      //   static int counter = 0;
 
-        ImGui::Begin("AdvancePlayer");                           // Create a window called "Hello, world!" and append into it.
-        ImGui::Text("This is some useful text.");                // Display some text (you can use a format strings too)
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
+      //   ImGui::Begin("Player");                           // Create a window called "Hello, world!" and append into it.
+      //   ImGui::Text("This is some useful text.");                // Display some text (you can use a format strings too)
+      //   ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
+      //   ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
 
-        if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-          counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+      //   if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+      //     counter++;
+      //   ImGui::SameLine();
+      //   ImGui::Text("counter = %d", counter);
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        ImGui::End();
-      }
+      //   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+      //   ImGui::End();
+      // }
 
       // Rendering
-      ImGui::Render();
+      // ImGui::Render();
       SDL_RenderSetScale(m_sdlRender, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
       SDL_SetRenderDrawColor(m_sdlRender, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
       SDL_RenderClear(m_sdlRender);
 
       render();
+
+      // ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_sdlRender);
+      SDL_RenderPresent(m_sdlRender);
       auto t2 = getTimestamp();
       // printf(">>>>>>>>>>>>>>>>>>>>>%lld\n", t2 - t1);
-      ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_sdlRender);
-      SDL_RenderPresent(m_sdlRender);
     }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
@@ -247,7 +248,7 @@ namespace implayer
                                    // be stretched to fill the given rectangle
       );
       // SDL_RenderPresent(m_sdlRender);
-      // doAVSync(frame_for_draw_->pts_d());
+      doAVSync(frame_for_draw_->pts_d());
     }
   }
 
@@ -335,7 +336,7 @@ namespace implayer
       return -1;
     }
 
-    m_sdlRender = SDL_CreateRenderer(m_sdlWindow, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    m_sdlRender = SDL_CreateRenderer(m_sdlWindow, -1, SDL_RENDERER_ACCELERATED);
     if (m_sdlRender == nullptr)
     {
       SDL_Log("Error creating SDL_Renderer!");
