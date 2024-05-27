@@ -33,6 +33,8 @@ namespace implayer
 
   IMSDL2Output::~IMSDL2Output()
   {
+    frame_for_draw_ = nullptr;
+
     // Cleanup
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -114,6 +116,8 @@ namespace implayer
     // Our state
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
 
+    auto t1 = getTimestamp();
+
     // Main loop
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
@@ -125,7 +129,6 @@ namespace implayer
 #endif
     {
       onEvent();
-      auto t1 = getTimestamp();
 
       // Start the Dear ImGui frame
       ImGui_ImplSDLRenderer2_NewFrame();
@@ -158,10 +161,13 @@ namespace implayer
       SDL_RenderClear(m_sdlRender);
 
       render();
-      auto t2 = getTimestamp();
-      // printf(">>>>>>>>>>>>>>>>>>>>>%lld\n", t2 - t1);
+
       ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_sdlRender);
       SDL_RenderPresent(m_sdlRender);
+
+      auto t2 = getTimestamp();
+      printf(">>>>>>>>>>>>>>>>>>>>>%lld\n", t2 - t1);
+      t1 = t2;
     }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
@@ -215,19 +221,20 @@ namespace implayer
 
   void IMSDL2Output::render()
   {
-    PlayState state = player_->state();
-    if (state != PlayState::kPlaying)
-    {
-      return;
-    }
+    // PlayState state = player_->state();
+    // if (state != PlayState::kPlaying)
+    // {
+    //   return;
+    // }
 
-    auto frame = player_->dequeueVideoFrame();
-    if (frame == nullptr)
-    {
-      return;
-    }
+    // auto frame = player_->dequeueVideoFrame();
+    // if (frame == nullptr)
+    // {
+    //   return;
+    // }
 
-    frame_for_draw_ = convertFrame(frame);
+    // frame_for_draw_ = convertFrame(frame);
+    
     if (frame_for_draw_ != nullptr)
     {
 
@@ -253,18 +260,15 @@ namespace implayer
 
   int IMSDL2Output::updateFrame(FrameSharedPtr frame)
   {
-    return -1;
+    FrameEvent *data = new FrameEvent{};
+    data->frame = frame;
 
-    // printf("IMSDL2Output::updateFrame\n");
-    // FrameEvent *data = new FrameEvent{};
-    // data->frame = frame;
+    SDL_Event event;
+    event.type = SDL_EVENT_REFRESH;
+    event.user.data1 = data;
+    SDL_PushEvent(&event);
 
-    // SDL_Event event;
-    // event.type = SDL_EVENT_REFRESH;
-    // event.user.data1 = data;
-    // SDL_PushEvent(&event);
-
-    // return 0;
+    return 0;
 
     // AVFrame *pict = frame->f;
     // SDL_UpdateYUVTexture(m_sdlTexture, nullptr,
