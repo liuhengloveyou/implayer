@@ -55,6 +55,7 @@ set(SOURCES
         ${SOURCE_DIR}/output/sdl2_audio_output.cc
         ${SOURCE_DIR}/output/sdl2_video_output.cc
         ${SOURCE_DIR}/output/imgui_sdl2_video_output.cc
+        ${SOURCE_DIR}/demo/avio_write_h264.cc
         ${IMGUI_DIR}/imgui.cpp
         ${IMGUI_DIR}/imgui_demo.cpp
         ${IMGUI_DIR}/imgui_draw.cpp
