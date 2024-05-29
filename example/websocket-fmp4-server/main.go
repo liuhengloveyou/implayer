@@ -17,12 +17,12 @@ func WebsocketServer(ws *websocket.Conn) {
 
 	var req []byte
 	n, err := ws.Read(req)
-	fmt.Println("ws req: ", n, err)
 
 	i := 0
 
 	for {
 		websocket.Message.Send(ws, buf[i:i+1024])
+		fmt.Println("ws: ", i, len(buf))
 
 		i = i + 1024
 		if i > len(buf)-1024 {
