@@ -14,14 +14,14 @@
 
 namespace implayer
 {
-  class IMplayer : public IIMplayer
+  class IMplayer : public IIMplayer, public std::enable_shared_from_this<IMplayer>
   {
   public:
     IMplayer();
     ~IMplayer();
 
   public:
-    int open(IMPlayerSharedPtr player, const std::string &in_file) override;
+    int open(const std::string &path) override;
     int play() override;
     int stop() override;
     int seek(int64_t timestamp) override;

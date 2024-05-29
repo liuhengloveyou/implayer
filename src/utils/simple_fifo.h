@@ -1,5 +1,5 @@
-#ifndef AUDIOEFFECT_AE_SIMPLE_FIFO_H
-#define AUDIOEFFECT_AE_SIMPLE_FIFO_H
+#ifndef IMPLAYER_SIMPLE_FIFO_H
+#define IMPLAYER_SIMPLE_FIFO_H
 
 #include <vector>
 
@@ -13,8 +13,8 @@ namespace implayer
     explicit SimpleFIFO(int capacity) { setCapacity(capacity); }
     ~SimpleFIFO() = default;
 
+  public:
     size_t capacity() const { return (buf_.size() - 1); }
-
     size_t size() const
     {
       return write_pos_ >= read_pos_ ? (write_pos_ - read_pos_)
@@ -22,9 +22,7 @@ namespace implayer
     }
 
     bool full() const { return size() == capacity(); }
-
     bool empty() const { return size() == 0; }
-
     bool push(T &&value)
     {
       if (full())
@@ -69,11 +67,13 @@ namespace implayer
     {
       return current_pos >= capacity() ? 0 : current_pos + 1;
     }
+
+  private:
     std::vector<T> buf_;
     size_t read_pos_{0};
     size_t write_pos_{0};
   };
 
-} // namespace implayer
+}
 
-#endif // AUDIOEFFECT_AE_SIMPLE_FIFO_H
+#endif

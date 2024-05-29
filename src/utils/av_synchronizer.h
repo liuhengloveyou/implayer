@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_AV_SYNCHRONIZER_H
-#define FFMPEG_VIDEO_PLAYER_AV_SYNCHRONIZER_H
+#ifndef IMPLAYER_AV_SYNCHRONIZER_H
+#define IMPLAYER_AV_SYNCHRONIZER_H
 
 #include <cmath>
 
@@ -54,6 +54,6 @@ namespace implayer
     static constexpr double AV_NOSYNC_THRESHOLD = 10.0;
     double last_duration = 0.0f;
   };
-} // namespace implayer
+}
 
-#endif // FFMPEG_VIDEO_PLAYER_AV_SYNCHRONIZER_H
+#endif

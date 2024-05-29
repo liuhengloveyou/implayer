@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_CLOCK_MANAGER_H
-#define FFMPEG_VIDEO_PLAYER_CLOCK_MANAGER_H
+#ifndef IMPLAYER_CLOCK_MANAGER_H
+#define IMPLAYER_CLOCK_MANAGER_H
 
 #include "ffmpeg/ffmpeg_headers.h"
 #include "clock.h"

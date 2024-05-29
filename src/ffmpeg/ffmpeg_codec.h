@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_FFMPEG_CODEC_H
-#define FFMPEG_VIDEO_PLAYER_FFMPEG_CODEC_H
+#ifndef IMPLAYER_FFMPEG_CODEC_H
+#define IMPLAYER_FFMPEG_CODEC_H
 
 #include "ffmpeg/ffmpeg_headers.h"
 #include "ffmpeg/ffmpeg_common_utils.h"
@@ -77,4 +77,4 @@ namespace implayer
   };
 } // namespace implayer
 
-#endif // FFMPEG_VIDEO_PLAYER_FFMPEG_CODEC_H
+#endif // IMPLAYER_FFMPEG_CODEC_H

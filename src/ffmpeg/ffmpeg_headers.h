@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_FFMPEG_HEADERS_H
-#define FFMPEG_VIDEO_PLAYER_FFMPEG_HEADERS_H
+#ifndef IMPLAYER_FFMPEG_HEADERS_H
+#define IMPLAYER_FFMPEG_HEADERS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,6 +14,10 @@ extern "C" {
 #include <libavutil/time.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavformat/avio.h>
+#include <libavutil/file.h>
 
 #ifdef __cplusplus
 }

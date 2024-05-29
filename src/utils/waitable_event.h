@@ -2,8 +2,8 @@
 // Created by user on 11/11/23.
 //
 
-#ifndef FFMPEG_VIDEO_PLAYER_WAITABLE_EVENT_H
-#define FFMPEG_VIDEO_PLAYER_WAITABLE_EVENT_H
+#ifndef IMPLAYER_WAITABLE_EVENT_H
+#define IMPLAYER_WAITABLE_EVENT_H
 #include <mutex>
 namespace implayer {
 class WaitableEvent {
@@ -51,4 +51,4 @@ private:
 
 } // namespace implayer
 
-#endif // FFMPEG_VIDEO_PLAYER_WAITABLE_EVENT_H
+#endif // IMPLAYER_WAITABLE_EVENT_H

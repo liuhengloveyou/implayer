@@ -2,8 +2,8 @@
 // Created by user on 1/19/23.
 //
 
-#ifndef FFMPEG_VIDEO_PLAYER_FFMPEG_FRAME_QUEUE_H
-#define FFMPEG_VIDEO_PLAYER_FFMPEG_FRAME_QUEUE_H
+#ifndef IMPLAYER_FFMPEG_FRAME_QUEUE_H
+#define IMPLAYER_FFMPEG_FRAME_QUEUE_H
 
 #include "ffmpeg_headers.h"
 #include <queue>
@@ -50,4 +50,4 @@ private:
 };
 } // namespace implayer
 
-#endif // FFMPEG_VIDEO_PLAYER_FFMPEG_FRAME_QUEUE_H
+#endif // IMPLAYER_FFMPEG_FRAME_QUEUE_H

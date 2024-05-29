@@ -8,6 +8,8 @@
 #include "ffmpeg/ffmpeg_headers.h"
 #include "ffmpeg/ffmpeg_decoder_context.h"
 #include "core/player.h"
+#include "network/emscripten_websocket.h"
+#include "source/source_factory.h"
 
 namespace implayer
 {
@@ -23,13 +25,15 @@ namespace implayer
     source_ = nullptr;
   }
 
-  int IMplayer::open(IMPlayerSharedPtr player, const std::string &in_file)
+  int IMplayer::open(const std::string &path)
   {
-    source_ = std::make_shared<SimpleSource>(player);
-
-    auto ret = source_->open(in_file);
-    RETURN_IF_ERROR_LOG(ret, "open source failed, exit");
+    int ret = 0;
+    // source_ = std::make_shared<SimpleSource>();
+    source_ = SourceFactory::getInstance().Create(SourceType::WEBSOCKET_FMP4, shared_from_this());
+    ret = source_->open(path);
+    // RETURN_IF_ERROR_LOG(ret, "open source failed, exit");
     fprintf(stdout, "video_source_->open ok.\n");
+    return 0;
 
     media_file_info_ = source_->getMediaFileInfo();
     VideoOutputParameters video_output_param;
@@ -42,8 +46,8 @@ namespace implayer
     audio_output_param.channels = media_file_info_.channels == 1 ? 1 : 2;
     audio_output_param.num_frames_of_buffer = 1024;
 
-    video_output_ = std::make_shared<IMSDL2Output>(player);
-    audio_output_ = std::make_shared<SDL2AudioOutput>(player);
+    video_output_ = std::make_shared<IMSDL2Output>(shared_from_this());
+    audio_output_ = std::make_shared<SDL2AudioOutput>(shared_from_this());
     ret = prepareForOutput(media_file_info_, video_output_param, audio_output_param);
     fprintf(stdout, "prepare player: %d\n", ret);
 

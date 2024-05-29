@@ -14,11 +14,18 @@ SOURCES = src/main.cc \
         src/utils/thread_base.cc \
         src/source/ffmpeg_decoder.cc \
         src/source/simple_source.cc \
+		src/source/source_factory.cc \
+		src/source/websocket_fmp4.cc \
         src/output/base_video_output.cc \
         src/output/base_audio_output.cc \
         src/output/sdl2_video_output.cc \
         src/output/sdl2_audio_output.cc \
-		src/demo/avio_write_h264.cc
+		src/output/imgui_sdl2_video_output.cc \
+		src/network/emscripten_websocket.cc \
+		src/ffmpeg/ffmpeg_demuxer.cc \
+		src/ffmpeg/ffmpeg_avio_demuxer.cc
+		
+
 
 SOURCES += $(IMGUI_DIR)/imgui.cpp \
 		$(IMGUI_DIR)/imgui_demo.cpp \
@@ -38,7 +45,7 @@ UNAME_S := $(shell uname -s)
 
 # ("EMS" options gets added to both CPPFLAGS and LDFLAGS, whereas some options are for linker only)
 EMS += -s USE_SDL=2
-# EMS += -s DISABLE_EXCEPTION_CATCHING=1
+EMS += -sNO_DISABLE_EXCEPTION_CATCHING #DISABLE_EXCEPTION_CATCHING=1
 LDFLAGS += -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=1
 LDFLAGS +=  -sPTHREAD_POOL_SIZE=8
 LDFLAGS += -s INITIAL_MEMORY=512MB -s TOTAL_MEMORY=2048MB -s ALLOW_MEMORY_GROWTH=1
@@ -84,6 +91,12 @@ LDFLAGS += $(EMS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 %.o:src/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:src/network/%.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:src/ffmpeg/%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 %.o:src/core/%.cc

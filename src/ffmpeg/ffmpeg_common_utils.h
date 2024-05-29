@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_FFMPEG_COMMON_UTILS_H
-#define FFMPEG_VIDEO_PLAYER_FFMPEG_COMMON_UTILS_H
+#ifndef IMPLAYER_FFMPEG_COMMON_UTILS_H
+#define IMPLAYER_FFMPEG_COMMON_UTILS_H
 
 #define LOGE(...) printf(__VA_ARGS__)
 #define LOGW(...) printf(__VA_ARGS__)
@@ -16,4 +16,4 @@
     return (ret);                                                              \
   }
 
-#endif // FFMPEG_VIDEO_PLAYER_FFMPEG_COMMON_UTILS_H
+#endif // IMPLAYER_FFMPEG_COMMON_UTILS_H

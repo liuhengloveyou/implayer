@@ -5,6 +5,7 @@
 
 #include "core/frame.h"
 #include "core/media_file_info.h"
+#include "core/i_player.h"
 
 namespace implayer
 {

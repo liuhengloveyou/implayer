@@ -23,7 +23,6 @@ namespace implayer
         Singleton() = default;
         ~Singleton() = default;
     };
-
 }
 
 #endif

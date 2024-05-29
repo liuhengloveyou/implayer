@@ -21,7 +21,7 @@ namespace implayer
   class IIMplayer
   {
   public:
-    virtual int open(std::shared_ptr<IIMplayer> player, const std::string &in_file) = 0;
+    virtual int open(const std::string &in_file) = 0;
     virtual int play() = 0;
     virtual int stop() = 0;
     virtual int seek(int64_t timestamp) = 0;

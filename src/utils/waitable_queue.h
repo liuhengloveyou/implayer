@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_WAITABLE_QUEUE_H
-#define FFMPEG_VIDEO_PLAYER_WAITABLE_QUEUE_H
+#ifndef IMPLAYER_WAITABLE_QUEUE_H
+#define IMPLAYER_WAITABLE_QUEUE_H
 
 #include <queue>
 #include <thread>
@@ -111,4 +111,4 @@ private:
 };
 } // namespace implayer
 
-#endif // FFMPEG_VIDEO_PLAYER_WAITABLE_QUEUE_H
+#endif // IMPLAYER_WAITABLE_QUEUE_H

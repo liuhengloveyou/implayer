@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_PLAYER_CLOCK_H
-#define FFMPEG_VIDEO_PLAYER_CLOCK_H
+#ifndef IMPLAYER_CLOCK_H
+#define IMPLAYER_CLOCK_H
 #include <atomic>
 namespace implayer
 {

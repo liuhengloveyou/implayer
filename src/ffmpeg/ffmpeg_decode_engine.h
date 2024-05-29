@@ -2,8 +2,8 @@
 // Created by user on 2/1/23.
 //
 
-#ifndef FFMPEG_VIDEO_PLAYER_FFMPEG_DECODE_ENGINE_H
-#define FFMPEG_VIDEO_PLAYER_FFMPEG_DECODE_ENGINE_H
+#ifndef IMPLAYER_FFMPEG_DECODE_ENGINE_H
+#define IMPLAYER_FFMPEG_DECODE_ENGINE_H
 #pragma once
 #include "ffmpeg_audio_resampler.h"
 #include "ffmpeg_codec.h"
@@ -611,4 +611,4 @@ private:
 
 } // namespace implayer
 
-#endif // FFMPEG_VIDEO_PLAYER_FFMPEG_DECODE_ENGINE_H
+#endif // IMPLAYER_FFMPEG_DECODE_ENGINE_H

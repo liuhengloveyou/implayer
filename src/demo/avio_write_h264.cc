@@ -125,7 +125,7 @@ int avio_write_h264(const char *input_url, const char *output_file)
         goto end;
     }
 
-    AVPacket packet = { 0 };
+
     while (av_read_frame(input_ctx, &packet) >= 0) {
         if (packet.stream_index == in_video_stream->index) {
             av_packet_rescale_ts(&packet, in_video_stream->time_base, out_video_stream->time_base);
