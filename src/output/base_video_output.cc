@@ -26,9 +26,11 @@ namespace implayer
     }
     parameters_ = parameters;
 
+    int ret = prepareImageConverter(media_info, parameters);
+
     startThread();
 
-    return prepareImageConverter(media_info, parameters);
+    return ret;
   }
 
   int BaseVideoOutput::prepareImageConverter(const MediaFileInfo &src_media_info, const VideoOutputParameters &v_out_params)
@@ -36,13 +38,13 @@ namespace implayer
     int expected_width = v_out_params.width;
     int expected_height = v_out_params.height;
     int expected_pixel_format = v_out_params.pixel_format;
+    printf("prepare image converter: %d %d %d\n", (AVPixelFormat)src_media_info.pixel_format, src_media_info.width, src_media_info.height);
 
     auto ret = image_converter_->prepare(
         src_media_info.width, src_media_info.height,
         (AVPixelFormat)src_media_info.pixel_format, expected_width,
         expected_height, (AVPixelFormat)expected_pixel_format, 0, nullptr,
         nullptr, nullptr);
-    printf("prepare image converter: %d\n", ret);
 
     return 0;
   }
@@ -65,7 +67,8 @@ namespace implayer
         std::shared_ptr<Frame> frame_for_draw = convertFrame(frame);
         if (frame_for_draw != nullptr)
         {
-          if (updateFrame(frame_for_draw) < 0) {
+          if (updateFrame(frame_for_draw) < 0)
+          {
             break;
           }
           doAVSync(frame_for_draw->pts_d());

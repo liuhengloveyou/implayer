@@ -23,6 +23,7 @@ set(FFMPEG_DIR ${CMAKE_SOURCE_DIR}/../ffmpeg-6.1.1-full_build-shared)
 
 ########### 三方依赖库 ############
 include(${CMAKE_SOURCE_DIR}/deps/sdl2.cmake)
+include(${CMAKE_SOURCE_DIR}/deps/glog.cmake)
 ########### 三方依赖库 ###########
 
 find_library(LIBAVUTIL avutil ${FFMPEG_DIR}/lib)
@@ -79,3 +80,24 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})
 target_link_libraries(${PROJECT_NAME} ${DEPS_LIB})
 
+# 单元测试配置
+include(${CMAKE_SOURCE_DIR}/deps/googletest.cmake)
+enable_testing()
+set(TEST_SOURCE
+        ${SOURCE_DIR}/eeg_sdk_unittest.cc
+        ${SOURCE_DIR}/algorithm/algorithm_test.cc
+        ${SOURCE_DIR}/algorithm/types_unittest.cc
+        ${SOURCE_DIR}/bin/algorithm/analysis_runner_unittest.cc
+        ${SOURCE_DIR}/protocol/protocol_test.cc
+        ${SOURCE_DIR}/storage/database_access_unittest.cc
+        ${SOURCE_DIR}/storage/wavedata_access_unittest.cc
+        ${SOURCE_DIR}/device/device_manager_test.cc
+)
+add_executable(${PROJECT_NAME}_test)
+target_sources(${PROJECT_NAME}_test PRIVATE ${SOURCES} ${PROTO_SRCS} ${ALGORITHM_BIN_SOURCE} ${TEST_SOURCE})
+target_link_libraries(${PROJECT_NAME}_test gtest_main ${DEPS_LIB} ${ALGORITHM_BIN_LIBS})
+target_include_directories(${PROJECT_NAME}_test PRIVATE ${INCLUDES})
+include(GoogleTest)
+gtest_discover_tests(${PROJECT_NAME}_test)
+
+file(COPY ${CMAKE_SOURCE_DIR}/test/resources/ DESTINATION ${CMAKE_BINARY_DIR} USE_SOURCE_PERMISSIONS)

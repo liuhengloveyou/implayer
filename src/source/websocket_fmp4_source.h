@@ -6,7 +6,7 @@
 #include <chrono>
 #include <memory>
 
-#include "source/i_source.h"
+#include "source/base_source.h"
 #include "ffmpeg/i_demuxer.h"
 #include "ffmpeg/ffmpeg_avio_demuxer.h"
 #include "ffmpeg/ffmpeg_codec.h"
@@ -16,7 +16,7 @@
 
 namespace implayer
 {
-    class WebsocketFmp4Source : public DmuxerAdapter, public WebsocketAdapter, public ISource
+    class WebsocketFmp4Source : public DmuxerAdapter, public WebsocketAdapter, public BaseSource
     {
 
     public:
@@ -32,21 +32,17 @@ namespace implayer
 
         // ISource
     public:
-        int open(const std::string &file_path) override;
-        int seek(int64_t timestamp) override;
-        MediaFileInfo getMediaFileInfo() override;
-        int64_t getDuration() override;
-        int64_t getCurrentPosition() override;
-        int getQueueSize() override;
-        std::shared_ptr<Frame> dequeueVideoFrame() override;
-        std::shared_ptr<Frame> dequeueAudioFrame() override;
+        int Open(const std::string &path) override;
+        AVStream *stream(int stream_index) const override;
+        MediaFileInfo media_info() const override;
+        int video_stream_index() override;
+        int audio_stream_index() override;
+        int64_t duration() override;
 
     private:
-        jnk0le::Ringbuffer<uint8_t, 4096> ring_buffer_;
+        jnk0le::Ringbuffer<uint8_t, 1024 * 1024> ring_buffer_;
         std::shared_ptr<EmscriptenWebsocket> ws_{nullptr};
         std::shared_ptr<FFmpegAvioDmuxer> demux_{nullptr};
-        std::shared_ptr<FFmpegCodec> video_codec_{nullptr};
-        std::shared_ptr<FFmpegCodec> audio_codec_{nullptr};
     };
 }
 

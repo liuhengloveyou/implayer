@@ -6,22 +6,15 @@
 #include <string>
 
 #include "core/frame.h"
+#include "core/types.h"
 
 namespace implayer
 {
-  enum class PlayState : int
-  {
-    kIdle = 1,
-    kStopped,
-    kPlaying,
-    kSeeking,
-    kPaused,
-  };
-
   class IIMplayer
   {
   public:
-    virtual int open(const std::string &in_file) = 0;
+    virtual int Run() = 0;
+    virtual int open(SourceType source_type, const std::string &path) = 0;
     virtual int play() = 0;
     virtual int stop() = 0;
     virtual int seek(int64_t timestamp) = 0;

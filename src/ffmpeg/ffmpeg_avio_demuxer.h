@@ -20,37 +20,40 @@ namespace implayer
   {
   public:
     FFmpegAvioDmuxer(){};
-    ~FFmpegAvioDmuxer()
-    {
-      close();
-      adapter_ = nullptr;
-    }
+    ~FFmpegAvioDmuxer();
 
-    void attachAdapter(DmuxerAdapter* adapter)
+    void attachAdapter(DmuxerAdapter *adapter)
     {
       adapter_ = adapter;
     }
 
+    int ReadPacket(void *opaque, uint8_t *buf, int buf_size)
+    {
+      if (adapter_)
+      {
+        return adapter_->ReadPacket(opaque, buf, buf_size);
+      }
+
+      return 0;
+    }
+
   public:
-    int open(const std::string &file_path) override;
-    void close() override;
-    std::pair<int, AVPacket *> readPacket() override;
-    void dumpFormat() const override;
-    AVFormatContext *getFormatContext() override;
-    int getStreamCount() const override;
-    int getVideoStreamIndex() override;
-    int getAudioStreamIndex() override;
-    AVStream *getStream(int stream_index) const override;
-    int seek(int64_t min_ts, int64_t ts, int64_t max_ts, int flags) override;
+    int Open(const std::string &file_path) override;
+    int Seek(int64_t min_ts, int64_t ts, int64_t max_ts, int flags) override;
+    std::pair<int, AVPacket *> ReadFrame() override;
+    AVFormatContext *format_context() const override;
+    AVStream *stream(int stream_index) const override;
+    int stream_count() override;
+    int video_stream_index() override;
+    int audio_stream_index() override;
 
   private:
     void findFirstVideoStreamIndex();
     void findFirstAudioStreamIndex();
     int findFirstStreamIndex(AVMediaType target_type);
-    void allocateInternalPacket();
 
   private:
-    DmuxerAdapter* adapter_{nullptr};
+    DmuxerAdapter *adapter_{nullptr};
     AVFormatContext *format_ctx_{nullptr};
     AVPacket *packet_{nullptr};
     int video_stream_index_{-1};

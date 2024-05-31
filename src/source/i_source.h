@@ -12,15 +12,20 @@ namespace implayer
   class ISource
   {
   public:
-    virtual int open(const std::string &file_path) = 0;
-    virtual int seek(int64_t timestamp) = 0;
-    virtual MediaFileInfo getMediaFileInfo() = 0;
-    virtual int64_t getDuration() = 0;
-    virtual int64_t getCurrentPosition() = 0;
-    virtual int getQueueSize() = 0;
+    virtual int Open(const std::string &path) = 0;
+    virtual std::shared_ptr<Frame> NextVideoFrame() = 0;
+    virtual std::shared_ptr<Frame> NextAudioFrame() = 0;
+    virtual int Seek(int64_t timestamp) = 0;
+    virtual std::shared_ptr<Frame> SeekFrameQuick(int64_t timestamp) = 0;
+    virtual std::shared_ptr<Frame> SeekFramePrecise(int64_t timestamp) = 0;
 
-    virtual std::shared_ptr<Frame> dequeueVideoFrame() = 0;
-    virtual std::shared_ptr<Frame> dequeueAudioFrame() = 0;
+    virtual MediaFileInfo media_info() const = 0;
+    virtual AVStream *stream(int stream_index) const = 0;
+    virtual int video_stream_index() = 0;
+    virtual int audio_stream_index() = 0;
+    virtual int64_t duration() = 0;
+    virtual int64_t position() = 0;
+    virtual int queue_size() = 0;
   };
 }
 

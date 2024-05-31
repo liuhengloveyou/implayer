@@ -2,51 +2,38 @@
 
 namespace implayer
 {
-  struct buffer_data
+
+  static int avio_read_packet(void *opaque, uint8_t *buf, int buf_size)
   {
-    uint8_t *ptr;
-    size_t size; ///< size left in the buffer
-  };
-
-  static int read_packet(void *opaque, uint8_t *buf, int buf_size)
-  {
-    struct buffer_data *bd = (struct buffer_data *)opaque;
-    printf("ptr:%p size:%zu %d\n", bd->ptr, bd->size, buf_size);
-
-    buf_size = FFMIN(buf_size, bd->size);
-
-    if (!buf_size)
-      return AVERROR_EOF;
-
-    // /* copy internal buffer data to buf */
-    memcpy(buf, bd->ptr, buf_size);
-    bd->ptr += buf_size;
-    bd->size -= buf_size;
-
-    return buf_size;
+    FFmpegAvioDmuxer *dmuxer = (FFmpegAvioDmuxer *)opaque;
+    return dmuxer->ReadPacket(opaque, buf, buf_size);
   }
 
-  int FFmpegAvioDmuxer::open(const std::string &url)
+  FFmpegAvioDmuxer::~FFmpegAvioDmuxer()
   {
-    close();
+    adapter_ = nullptr;
 
-    struct buffer_data bd = {0};
-    uint8_t *buffer = NULL;
-    size_t buffer_size = 0;
-
-    /* slurp file content into buffer */
-    int ret = av_file_map(url.c_str(), &buffer, &buffer_size, 0, NULL);
-    if (ret < 0)
+    if (format_ctx_)
     {
-      printf("av_file_map err: %d\n", ret);
-      return ret;
+      avformat_close_input(&format_ctx_);
     }
-    printf(">>>>>>>>>>>>%ld\n", buffer_size);
 
-    /* fill opaque structure used by the AVIOContext read callback */
-    bd.ptr = buffer;
-    bd.size = buffer_size;
+    /* note: the internal buffer could have changed, and be != avio_ctx_buffer */
+    if (avio_ctx_)
+    {
+      av_freep(&avio_ctx_->buffer);
+      avio_context_free(&avio_ctx_);
+    }
 
+    if (packet_)
+    {
+      av_packet_unref(packet_);
+      av_packet_free(&packet_);
+    }
+  }
+
+  int FFmpegAvioDmuxer::Open(const std::string &url)
+  {
     format_ctx_ = avformat_alloc_context();
     if (format_ctx_ == NULL)
     {
@@ -59,14 +46,14 @@ namespace implayer
       return AVERROR(ENOMEM);
     }
     avio_ctx_ = avio_alloc_context(avio_ctx_buffer_, avio_ctx_buffer_size_,
-                                   0, &bd, &read_packet, NULL, NULL);
+                                   0, this, &avio_read_packet, NULL, NULL);
     if (!avio_ctx_)
     {
       return AVERROR(ENOMEM);
     }
     format_ctx_->pb = avio_ctx_;
 
-    ret = avformat_open_input(&format_ctx_, NULL, NULL, NULL);
+    int ret = avformat_open_input(&format_ctx_, NULL, NULL, NULL);
     if (ret < 0)
     {
       fprintf(stderr, "Could not open input\n");
@@ -80,16 +67,17 @@ namespace implayer
       return ret;
     }
 
+    packet_ = av_packet_alloc();
+
     av_dump_format(format_ctx_, 0, url.c_str(), 0);
 
     findFirstVideoStreamIndex();
     findFirstAudioStreamIndex();
-    allocateInternalPacket();
 
     return 0;
   }
 
-  std::pair<int, AVPacket *> FFmpegAvioDmuxer::readPacket()
+  std::pair<int, AVPacket *> FFmpegAvioDmuxer::ReadFrame()
   {
     int ret = av_read_frame(format_ctx_, packet_);
     if (ret != 0)
@@ -100,32 +88,27 @@ namespace implayer
     return {ret, packet_};
   }
 
-  void FFmpegAvioDmuxer::dumpFormat() const
-  {
-    av_dump_format(format_ctx_, 0, format_ctx_->url, 0);
-  }
+  AVFormatContext *FFmpegAvioDmuxer::format_context() const { return format_ctx_; }
 
-  AVFormatContext *FFmpegAvioDmuxer::getFormatContext() { return format_ctx_; }
-
-  int FFmpegAvioDmuxer::getStreamCount() const
+  int FFmpegAvioDmuxer::stream_count()
   {
     return static_cast<int>(format_ctx_->nb_streams);
   }
 
-  int FFmpegAvioDmuxer::getVideoStreamIndex() { return video_stream_index_; }
+  int FFmpegAvioDmuxer::video_stream_index() { return video_stream_index_; }
 
-  AVStream *FFmpegAvioDmuxer::getStream(int stream_index) const
+  AVStream *FFmpegAvioDmuxer::stream(int stream_index) const
   {
-    if (stream_index < 0 || stream_index >= getStreamCount())
+    if (stream_index < 0)
     {
       return nullptr;
     }
     return format_ctx_->streams[stream_index];
   }
 
-  int FFmpegAvioDmuxer::getAudioStreamIndex() { return audio_stream_index_; }
+  int FFmpegAvioDmuxer::audio_stream_index() { return audio_stream_index_; }
 
-  int FFmpegAvioDmuxer::seek(int64_t min_ts, int64_t ts, int64_t max_ts, int flags)
+  int FFmpegAvioDmuxer::Seek(int64_t min_ts, int64_t ts, int64_t max_ts, int flags)
   {
     if (!format_ctx_)
     {
@@ -134,24 +117,6 @@ namespace implayer
     return avformat_seek_file(format_ctx_, -1, min_ts, ts, max_ts, flags);
   }
 
-  void FFmpegAvioDmuxer::close()
-  {
-    if (format_ctx_)
-    {
-      avformat_close_input(&format_ctx_);
-    }
-
-    /* note: the internal buffer could have changed, and be != avio_ctx_buffer */
-    if (avio_ctx_)
-      av_freep(&avio_ctx_->buffer);
-    avio_context_free(&avio_ctx_);
-
-    if (packet_)
-    {
-      av_packet_unref(packet_);
-      av_packet_free(&packet_);
-    }
-  }
   void FFmpegAvioDmuxer::findFirstVideoStreamIndex()
   {
     video_stream_index_ = findFirstStreamIndex(AVMEDIA_TYPE_VIDEO);
@@ -173,7 +138,5 @@ namespace implayer
     }
     return -1;
   }
-
-  void FFmpegAvioDmuxer::allocateInternalPacket() { packet_ = av_packet_alloc(); }
 
 }

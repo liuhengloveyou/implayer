@@ -1,20 +1,15 @@
 #include "source/simple_source.h"
-#include "source/ffmpeg_decoder.h"
 
 namespace implayer
 {
   SimpleSource::SimpleSource(IMPlayerSharedPtr player)
-      : player_(player),
-        decoder_(std::make_shared<FFmpegAVDecoder>()),
-        video_frame_queue_(std::make_shared<QueueType>(QueueSize)),
-        audio_frame_queue_(std::make_shared<QueueType>(QueueSize))
+      : BaseSource::BaseSource(player),
+        demux_(std::make_shared<FFmpegBaseDmuxer>())
   {
   }
 
   SimpleSource::~SimpleSource()
   {
-    stopThread();
-
     if (video_frame_queue_)
     {
       video_frame_queue_->flush();
@@ -25,107 +20,128 @@ namespace implayer
       audio_frame_queue_->flush();
       audio_frame_queue_ = nullptr;
     }
-
-    decoder_ = nullptr;
   };
 
-  int SimpleSource::open(const std::string &file_path)
+  int SimpleSource::Open(const std::string &path)
   {
-    startThread();
-
-    return decoder_->open(file_path);
-  }
-
-  void SimpleSource::threadMain()
-  {
-    while (m_thread_stop == false)
+    int ret = demux_->Open(path);
+    printf("SimpleSource::Open demux_->open: %d\n", ret);
+    if (ret)
     {
-      if (eof.load())
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        continue;
-      }
-
-      PlayState state = player_->state();
-      // fprintf(stdout, "SimpleSource::threadMain:: %d %d %d\n", state, video_frame_queue_->size(), audio_frame_queue_->size());
-      if (state == PlayState::kPlaying)
-      {
-        auto frame = decoder_->decodeNextFrame();
-        if (frame == nullptr || frame->f == nullptr)
-        {
-          eof.store(true);
-          continue;
-        }
-
-        if (frame->isVideo())
-        {
-          video_frame_queue_->wait_and_push(std::move(frame));
-        }
-        else if (frame->isAudio())
-        {
-          audio_frame_queue_->wait_and_push(std::move(frame));
-        }
-      }
-      else if (state == PlayState::kSeeking)
-      {
-        eof.store(false);
-        video_frame_queue_->flush();
-        audio_frame_queue_->flush();
-
-        auto frame = decoder_->seekFramePrecise(seek_timestamp_);
-        if (frame)
-        {
-          video_frame_queue_->wait_and_push(std::move(frame));
-          state = PlayState::kPaused;
-        }
-        else
-        {
-          state = PlayState::kStopped;
-        }
-      }
-      else if (state == PlayState::kPaused)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        // wait_event_.wait(-1);
-      }
-      else if (state == PlayState::kStopped)
-      {
-        video_frame_queue_->flush();
-        audio_frame_queue_->flush();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      }
-      else if (state == PlayState::kIdle)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      }
+      return ret;
     }
+
+    return BaseSource::Open(path);
   }
 
-  MediaFileInfo SimpleSource::getMediaFileInfo()
+  std::pair<int, AVPacket *> SimpleSource::ReadPacket()
   {
-    return decoder_->getMediaFileInfo();
+    return demux_->ReadFrame();
   }
 
-  int SimpleSource::seek(int64_t timestamp)
+  AVStream *SimpleSource::stream(int stream_index) const
+  {
+    return demux_->stream(stream_index);
+  }
+  int SimpleSource::video_stream_index()
+  {
+    return demux_->video_stream_index();
+  }
+  int SimpleSource::audio_stream_index()
+  {
+    return demux_->audio_stream_index();
+  }
+
+  // void SimpleSource::threadMain()
+  // {
+  // while (m_thread_stop == false)
+  // {
+  //   if (eof.load())
+  //   {
+  //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //     continue;
+  //   }
+
+  //   PlayState state = player_->state();
+  //   // fprintf(stdout, "SimpleSource::threadMain:: %d %d %d\n", state, video_frame_queue_->size(), audio_frame_queue_->size());
+  //   if (state == PlayState::kPlaying)
+  //   {
+  //     // auto frame = decoder_->decodeNextFrame();
+  //     // if (frame == nullptr || frame->f == nullptr)
+  //     // {
+  //     //   eof.store(true);
+  //     //   continue;
+  //     // }
+
+  //     // if (frame->isVideo())
+  //     // {
+  //     //   video_frame_queue_->wait_and_push(std::move(frame));
+  //     // }
+  //     // else if (frame->isAudio())
+  //     // {
+  //     //   audio_frame_queue_->wait_and_push(std::move(frame));
+  //     // }
+  //   }
+  //   else if (state == PlayState::kSeeking)
+  //   {
+  //     // eof.store(false);
+  //     // video_frame_queue_->flush();
+  //     // audio_frame_queue_->flush();
+
+  //     // auto frame = decoder_->seekFramePrecise(seek_timestamp_);
+  //     // if (frame)
+  //     // {
+  //     //   video_frame_queue_->wait_and_push(std::move(frame));
+  //     //   state = PlayState::kPaused;
+  //     // }
+  //     // else
+  //     // {
+  //     //   state = PlayState::kStopped;
+  //     // }
+  //   }
+  //   else if (state == PlayState::kPaused)
+  //   {
+  //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //     // wait_event_.wait(-1);
+  //   }
+  //   else if (state == PlayState::kStopped)
+  //   {
+  //     video_frame_queue_->flush();
+  //     audio_frame_queue_->flush();
+  //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //   }
+  //   else if (state == PlayState::kIdle)
+  //   {
+  //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //   }
+  // }
+  // }
+
+  MediaFileInfo SimpleSource::media_info() const
+  {
+    // return decoder_->getMediaFileInfo();
+  }
+
+  int SimpleSource::Seek(int64_t timestamp)
   {
     seek_timestamp_ = timestamp;
-    eof.store(false);
+    eof_.store(false);
 
     return 0;
   }
 
-  int64_t SimpleSource::getDuration()
+  int64_t SimpleSource::duration()
   {
-    return decoder_->getMediaFileInfo().duration;
+    // return decoder_->getMediaFileInfo().duration;
   }
 
-  int64_t SimpleSource::getCurrentPosition()
+  int64_t SimpleSource::position()
   {
-    return decoder_->getPosition();
+    // return decoder_->getPosition();
   }
 
-  std::shared_ptr<Frame> SimpleSource::dequeueVideoFrame() { return tryPopAFrame(AVMEDIA_TYPE_VIDEO); }
-  std::shared_ptr<Frame> SimpleSource::dequeueAudioFrame() { return tryPopAFrame(AVMEDIA_TYPE_AUDIO); }
+  std::shared_ptr<Frame> SimpleSource::NextVideoFrame() { return tryPopAFrame(AVMEDIA_TYPE_VIDEO); }
+  std::shared_ptr<Frame> SimpleSource::NextAudioFrame() { return tryPopAFrame(AVMEDIA_TYPE_AUDIO); }
   std::shared_ptr<Frame> SimpleSource::tryPopAFrame(AVMediaType media_type)
   {
     std::shared_ptr<Frame> f = nullptr;

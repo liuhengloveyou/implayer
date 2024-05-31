@@ -4,9 +4,16 @@
 #include "ffmpeg/ffmpeg_image_converter.h"
 #include "source/i_source.h"
 #include "utils/clock_manager.h"
+#include <SDL2/SDL.h>
 
 namespace implayer
 {
+#define SDL_EVENT_OPEN (SDL_USEREVENT + 1)
+#define SDL_EVENT_PLAY (SDL_USEREVENT + 2)
+#define SDL_EVENT_REFRESH (SDL_USEREVENT + 3)
+#define SDL_EVENT_REFRESH_AUDIO (SDL_USEREVENT + 4)
+#define SDL_EVENT_RESIZE (SDL_USEREVENT + 5)
+
   class VideoOutputParameters
   {
   public:

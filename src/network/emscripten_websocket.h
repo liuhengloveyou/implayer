@@ -22,16 +22,16 @@ namespace implayer
         virtual int OnWebSocketMessage(uint8_t *data, uint32_t numBytes) = 0;
     };
 
-    class EmscriptenWebsocket : public ThreadBase
+    class EmscriptenWebsocket
     {
     public:
         EmscriptenWebsocket(){};
         ~EmscriptenWebsocket();
 
     public:
-        int init(const std::string url);
-        void threadMain() override;
-        int OnWebSocketMessage(uint8_t *data, uint32_t numBytes);
+        int open(const std::string url);
+        int SendText(std::string txt);
+        int OnMessage(uint8_t *data, uint32_t numBytes);
         void attachAdapter(WebsocketAdapter* adapter)
         {
             adapter_ = adapter;

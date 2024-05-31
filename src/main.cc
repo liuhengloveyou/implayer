@@ -13,7 +13,6 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/file.h>
-#include "SDL.h"
 
 #ifdef __cplusplus
 }
@@ -23,7 +22,7 @@ extern "C"
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
-#include <unistd.h>
+#include <SDL2/SDL.h>
 #endif
 
 #include "core/player.h"
@@ -32,13 +31,13 @@ using namespace implayer;
 
 IMPlayerSharedPtr player = nullptr;
 
-static void *ThreadDemo(void *arg)
-{
-    for (;;) {
-        sleep(1);
-        printf("ThreadDemo\n");
-    }
-}
+// static void *ThreadDemo(void *arg)
+// {
+//     for (;;) {
+//         sleep(1);
+//         printf("ThreadDemo\n");
+//     }
+// }
 
 int main(int argc, char *argv[])
 {
@@ -55,29 +54,59 @@ int main(int argc, char *argv[])
 // #endif
 
     player = std::make_shared<IMplayer>();
-    int ret = player->open("ws://localhost:8080/ws");
-    printf("open player %d\n", ret);
-
-    // player->play();
-
-    printf("main return\n");
-    return 0;
+    return player->Run();
 }
 
 #ifdef __EMSCRIPTEN__
-int wasm_onPlay()
+int wasm_open_websocket_fmp4(std::string path)
 {
-    player->play();
+    if (path.size() >= 1024) {
+        return -1;
+    }
 
-    // SDL_Event event;
-    // event.type = SDL_EVENT_PLAY;
-    // SDL_PushEvent(&event);
+    Event *ev = (Event *)calloc(1, sizeof(Event));
+    strncpy(&ev->path[0], path.c_str(), path.size());
+    ev->source_type = SourceType::WEBSOCKET_FMP4_SOURCE;
+
+    SDL_Event event;
+    event.type = SDL_EVENT_OPEN;
+    event.user.data1 = ev;
+    SDL_PushEvent(&event);
+
+    return 0;
+}
+
+int wasm_open_file(std::string path)
+{
+    if (path.size() >= 1024) {
+        return -1;
+    }
+
+    Event *ev = (Event *)calloc(1, sizeof(Event));
+    strncpy(&ev->path[0], path.c_str(), path.size());
+    ev->source_type = SourceType::FILE_SOURCE;
+
+    SDL_Event event;
+    event.type = SDL_EVENT_OPEN;
+    event.user.data1 = ev;
+    SDL_PushEvent(&event);
+
+    return 0;
+}
+
+int wasm_play()
+{
+    SDL_Event event;
+    event.type = SDL_EVENT_PLAY;
+    SDL_PushEvent(&event);
 
     return 0;
 }
 
 EMSCRIPTEN_BINDINGS(my_module)
 {
-    emscripten::function("wasm_onPlay", &wasm_onPlay);
+    emscripten::function("wasm_open_file", &wasm_open_file);
+    emscripten::function("wasm_open_websocket_fmp4", &wasm_open_websocket_fmp4);
+    emscripten::function("wasm_play", &wasm_play);
 }
 #endif

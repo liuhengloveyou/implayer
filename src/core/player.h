@@ -5,27 +5,36 @@
 #include <memory>
 #include <thread>
 
+#include "core/i_player.h"
+#include "core/frame.h"
 #include "output/i_video_output.h"
 #include "output/i_audio_output.h"
 #include "source/i_source.h"
-#include "i_player.h"
-#include "core/frame.h"
 #include "utils/av_synchronizer.h"
+#include "utils/thread_base.h"
+#include "network/emscripten_websocket.h"
+#include "utils/waitable_event.h"
 
 namespace implayer
 {
-  class IMplayer : public IIMplayer, public std::enable_shared_from_this<IMplayer>
+  class IMplayer : public IIMplayer, public ThreadBase, public std::enable_shared_from_this<IMplayer>
   {
   public:
     IMplayer();
     ~IMplayer();
 
+    // ThreadBase
   public:
-    int open(const std::string &path) override;
+    void threadMain() override;
+
+    // IIMplayer
+  public:
+    int Run() override;
+    int open(SourceType source_type, const std::string &path) override;
     int play() override;
+    int pause() override;
     int stop() override;
     int seek(int64_t timestamp) override;
-    int pause() override;
     PlayState state() override { return state_.load(); }
     int64_t getCurrentPosition() override;
     std::shared_ptr<Frame> dequeueVideoFrame() override;
@@ -46,16 +55,26 @@ namespace implayer
     void doSeekRelative(float sec);
 
   private:
+    void OnEvent();
+    void HandleOpenEvent(void *data);
+    void HandlePlayEvent(void *data);
+
+  private:
+    std::shared_ptr<EmscriptenWebsocket> ws_{nullptr};
     std::shared_ptr<IVideoOutput> video_output_{nullptr};
     std::shared_ptr<IAudioOutput> audio_output_{nullptr};
     std::shared_ptr<ISource> source_{nullptr};
     std::shared_ptr<ClockManager> clock_{nullptr};
 
+    std::string path_{""};
+    SourceType source_type_{SourceType::UNKNOWN};
+
     MediaFileInfo media_file_info_{};
     std::atomic<PlayState> state_{PlayState::kIdle};
     AVSynchronizer av_sync_;
+    WaitableEvent waitable_;
+    std::atomic<bool> opened_{false};
   };
 
-} // namespace implayer
-
-#endif // IMPLAYER_SIMPLE_PLAYER_H
+}
+#endif

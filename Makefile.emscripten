@@ -12,21 +12,19 @@ FFMPEG_DIR = /opt/dev/ffmpeg/ffmpeg-emcc-6.1.1
 SOURCES = src/main.cc \
         src/core/player.cc \
         src/utils/thread_base.cc \
-        src/source/ffmpeg_decoder.cc \
-        src/source/simple_source.cc \
 		src/source/source_factory.cc \
-		src/source/websocket_fmp4.cc \
+        src/source/base_source.cc \
+		src/source/simple_source.cc \
+		src/source/websocket_fmp4_source.cc \
         src/output/base_video_output.cc \
         src/output/base_audio_output.cc \
         src/output/sdl2_video_output.cc \
         src/output/sdl2_audio_output.cc \
 		src/output/imgui_sdl2_video_output.cc \
 		src/network/emscripten_websocket.cc \
-		src/ffmpeg/ffmpeg_demuxer.cc \
+		src/ffmpeg/ffmpeg_base_demuxer.cc \
 		src/ffmpeg/ffmpeg_avio_demuxer.cc
 		
-
-
 SOURCES += $(IMGUI_DIR)/imgui.cpp \
 		$(IMGUI_DIR)/imgui_demo.cpp \
 		$(IMGUI_DIR)/imgui_draw.cpp \
@@ -132,5 +130,5 @@ serve: all
 $(EXE): $(OBJS) $(WEB_DIR)
 	$(CXX) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
 
-clean:
+clear:
 	rm -rf $(OBJS) $(WEB_DIR)

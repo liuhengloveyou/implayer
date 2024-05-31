@@ -1,10 +1,15 @@
-#include "source/ffmpeg_decoder.h"
-#include "source/simple_source.h"
+#include <thread>
+#include <chrono>
+
+#ifdef __EMSCRIPTEN__
+#include "emscripten/emscripten_mainloop_stub.h"
+#endif
+
 #include "output/sdl2_audio_output.h"
 #include "output/sdl2_video_output.h"
 #include "output/imgui_sdl2_video_output.h"
 #include "ffmpeg/ffmpeg_codec.h"
-#include "ffmpeg/ffmpeg_demuxer.h"
+#include "ffmpeg/ffmpeg_base_demuxer.h"
 #include "ffmpeg/ffmpeg_headers.h"
 #include "ffmpeg/ffmpeg_decoder_context.h"
 #include "core/player.h"
@@ -16,26 +21,81 @@ namespace implayer
   IMplayer::IMplayer()
       : clock_(std::make_shared<ClockManager>())
   {
+    if (SDL_InitSubSystem(SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0)
+    {
+      printf("SDL_InitSubSystem: %s\n", SDL_GetError());
+    }
+
+    startThread();
   }
 
   IMplayer::~IMplayer()
   {
+    stopThread();
+    SDL_QuitSubSystem(SDL_INIT_EVENTS | SDL_INIT_TIMER);
     audio_output_ = nullptr;
     video_output_ = nullptr;
     source_ = nullptr;
   }
 
-  int IMplayer::open(const std::string &path)
+  // webbrower main loop
+  int IMplayer::Run()
+  {
+
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
+    while (state() != PlayState::kStopped)
+#endif
+    {
+      OnEvent();
+
+      if (opened_)
+      {
+        video_output_->play();
+      }
+    }
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
+  }
+
+  void IMplayer::threadMain()
+  {
+    while (m_thread_stop == false)
+    {
+      // fprintf(stderr, "IMplayer::threadMain: ~~~~~~\n");
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+      if (opened_ == false)
+      {
+        if (waitable_.wait(10) == false)
+        {
+          continue;
+        }
+
+        printf("IMplayer::threadMain: [%s]\n", path_.c_str());
+        if (source_type_ != SourceType::UNKNOWN && path_ != "")
+        {
+          if (open(source_type_, path_) == 0)
+          {
+            opened_ = true;
+          }
+        }
+      }
+    }
+  }
+
+  int IMplayer::open(SourceType source_type, const std::string &path)
   {
     int ret = 0;
-    // source_ = std::make_shared<SimpleSource>();
-    source_ = SourceFactory::getInstance().Create(SourceType::WEBSOCKET_FMP4, shared_from_this());
-    ret = source_->open(path);
-    // RETURN_IF_ERROR_LOG(ret, "open source failed, exit");
-    fprintf(stdout, "video_source_->open ok.\n");
-    return 0;
 
-    media_file_info_ = source_->getMediaFileInfo();
+    source_ = SourceFactory::getInstance().Create(source_type, shared_from_this());
+    ret = source_->Open(path);
+    RETURN_IF_ERROR_LOG(ret, "open source failed, exit");
+    media_file_info_ = source_->media_info();
+    media_file_info_.Dump();
+
     VideoOutputParameters video_output_param;
     video_output_param.width = media_file_info_.width;
     video_output_param.height = media_file_info_.height;
@@ -51,7 +111,9 @@ namespace implayer
     ret = prepareForOutput(media_file_info_, video_output_param, audio_output_param);
     fprintf(stdout, "prepare player: %d\n", ret);
 
-    return 0;
+    // play();
+
+    return ret;
   }
 
   MediaFileInfo IMplayer::getMediaFileInfo() { return media_file_info_; }
@@ -107,7 +169,7 @@ namespace implayer
     }
     if (source_)
     {
-      ret |= source_->seek(timestamp);
+      ret |= source_->Seek(timestamp);
     }
     if (ret != 0)
     {
@@ -151,7 +213,7 @@ namespace implayer
     int64_t a_duration = 0;
     if (source_)
     {
-      v_duration = source_->getDuration();
+      v_duration = source_->duration();
     }
     return std::max(v_duration, a_duration);
   }
@@ -160,34 +222,137 @@ namespace implayer
   {
     if (source_)
     {
-      return source_->getCurrentPosition();
+      return source_->position();
     }
     return 0;
   }
 
   int IMplayer::prepareForOutput(const MediaFileInfo &media_info, const VideoOutputParameters &v_out_params, const AudioOutputParameters &a_out_params)
   {
-    if (audio_output_)
-    {
-      auto ret = audio_output_->prepare(media_info, a_out_params);
-      printf("prepare audio output: %d\n", ret);
+    int ret = 0;
+
+    // if (audio_output_)
+    // {
+    //   ret = audio_output_->prepare(media_info, a_out_params);
+    //   printf("prepare audio output: %d\n", ret);
+    // }
+    if (ret) {
+      return ret;
     }
 
     if (video_output_)
     {
-      auto ret = video_output_->prepare(media_info, v_out_params);
+      ret = video_output_->prepare(media_info, v_out_params);
       printf("prepare video output: %d\n", ret);
     }
 
-    return 0;
+    return ret;
   }
 
   std::shared_ptr<Frame> IMplayer::dequeueVideoFrame()
   {
-    return source_->dequeueVideoFrame();
+    return source_->NextVideoFrame();
   }
   std::shared_ptr<Frame> IMplayer::dequeueAudioFrame()
   {
-    return source_->dequeueAudioFrame();
+    return source_->NextAudioFrame();
+  }
+
+  void IMplayer::OnEvent()
+  {
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+
+      // ImGui_ImplSDL2_ProcessEvent(&event);
+
+      switch (event.type)
+      {
+      case SDL_WINDOWEVENT:
+      {
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+        {
+          // onResizeEvent();
+        }
+        else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) // && event.window.windowID == SDL_GetWindowID(m_sdlWindow)
+        {
+        }
+      }
+      break;
+      case SDL_EVENT_OPEN:
+      {
+        HandleOpenEvent(event.user.data1);
+      }
+      break;
+      case SDL_EVENT_PLAY:
+      {
+        HandlePlayEvent(event.user.data1);
+      }
+      break;
+      case SDL_EVENT_REFRESH:
+      {
+        // onUpdateFrame(event.user.data1);
+      }
+      case SDL_KEYDOWN:
+      {
+        switch (event.key.keysym.sym)
+        {
+        case SDLK_LEFT:
+        {
+          doSeekRelative(-5.0);
+          break;
+        }
+
+        case SDLK_RIGHT:
+        {
+          doSeekRelative(5.0);
+          break;
+        }
+
+        case SDLK_DOWN:
+        {
+          doSeekRelative(-60.0);
+          break;
+        }
+
+        case SDLK_UP:
+        {
+          doSeekRelative(60.0);
+          break;
+        }
+        case SDLK_SPACE:
+        {
+          doPauseOrPlaying();
+          break;
+        }
+        default:
+          break;
+        }
+        break;
+      }
+      break;
+      }
+    }
+  }
+
+  void IMplayer::HandleOpenEvent(void *data)
+  {
+    Event *ev = (Event *)data;
+    path_ = std::string(ev->path);
+    source_type_ = ev->source_type;
+    free(ev);
+
+    waitable_.signal();
+
+    return;
+  }
+
+  void IMplayer::HandlePlayEvent(void *data)
+  {
+    Event *ev = (Event *)data;
+    printf("IMplayer::HandlePlayEvent: [%s]\n", ev->path);
+    free(ev);
+
+    return;
   }
 }

@@ -37,7 +37,10 @@
 </head>
 
 <body>
+  <button id="open">open_file</button>
+  <button id="open_websocket">open_websocket</button>
   <button id="play">play</button>
+  <button id="pause">pause</button>
   
   <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
   <script type='text/javascript'>
@@ -70,8 +73,14 @@
       console.log("onerror: " + event);
     };
 
+    document.getElementById("open").onclick =  (ev) => {
+      Module.wasm_open_file("/input.mp4");
+    }
+    document.getElementById("open_websocket").onclick =  (ev) => {
+      Module.wasm_open_websocket_fmp4("ws://localhost:8080/ws");
+    }
     document.getElementById("play").onclick =  (ev) => {
-      Module.wasm_onPlay();
+      Module.wasm_play();
     }
   </script>
   {{{ SCRIPT }}}

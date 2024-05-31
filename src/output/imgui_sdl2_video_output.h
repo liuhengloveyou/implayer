@@ -42,11 +42,6 @@ extern "C"
 #include "core/i_player.h"
 #include "output/base_video_output.h"
 
-#define SDL_EVENT_PLAY (SDL_USEREVENT + 1)
-#define SDL_EVENT_REFRESH (SDL_USEREVENT + 2)
-#define SDL_EVENT_REFRESH_AUDIO (SDL_USEREVENT + 3)
-#define SDL_EVENT_RESIZE (SDL_USEREVENT + 4)
-
 namespace implayer
 {
 
@@ -62,8 +57,6 @@ namespace implayer
         int updateFrame(std::shared_ptr<Frame> frame) override;
         int play() override;
 
-        void run();
-
     private:
         void onResizeEvent();
         void onPlayEvent(void *data);
@@ -71,7 +64,7 @@ namespace implayer
 
     private:
         int InitImSDL2(const VideoOutputParameters &parameters);
-        void onEvent();
+        void HandleEvent();
         void render();
 
     private:

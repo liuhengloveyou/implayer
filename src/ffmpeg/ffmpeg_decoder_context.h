@@ -8,7 +8,7 @@
 #include "utils/waitable_queue.h"
 #include "ffmpeg/ffmpeg_audio_resampler.h"
 #include "ffmpeg/ffmpeg_codec.h"
-#include "ffmpeg/ffmpeg_demuxer.h"
+#include "ffmpeg/ffmpeg_base_demuxer.h"
 #include "ffmpeg/ffmpeg_frame_queue.h"
 #include "ffmpeg/ffmpeg_headers.h"
 #include "ffmpeg/ffmpeg_image_converter.h"
@@ -24,17 +24,17 @@ namespace implayer
   public:
     int prepare(const std::string &infile)
     {
-      int ret = demuxer.open(infile);
+      int ret = demuxer.Open(infile);
       RETURN_IF_ERROR_LOG(ret, "Could not open file %s\n", infile.c_str());
-      demuxer.dumpFormat();
+      demuxer.DumpFormat();
 
-      video_stream_index = demuxer.getVideoStreamIndex();
+      video_stream_index = demuxer.video_stream_index();
       RETURN_IF_ERROR_LOG(ret, "Could not find video stream")
-      audio_stream_index = demuxer.getAudioStreamIndex();
+      audio_stream_index = demuxer.audio_stream_index();
       RETURN_IF_ERROR_LOG(ret, "Could not find audio stream")
 
-      video_stream = demuxer.getStream(video_stream_index);
-      audio_stream = demuxer.getStream(audio_stream_index);
+      video_stream = demuxer.stream(video_stream_index);
+      audio_stream = demuxer.stream(audio_stream_index);
 
       ret = video_codec.prepare(video_stream->codecpar->codec_id,
                                 video_stream->codecpar);
@@ -45,14 +45,14 @@ namespace implayer
       RETURN_IF_ERROR_LOG(ret, "Prepare audio codec failed\n");
 
       auto dst_format = AVPixelFormat::AV_PIX_FMT_YUV420P;
-      video_codec_ctx = video_codec.getCodecContext();
+      video_codec_ctx = video_codec.codec_context();
       ret = img_conv.prepare(video_codec_ctx->width, video_codec_ctx->height,
                              video_codec_ctx->pix_fmt, video_codec_ctx->width,
                              video_codec_ctx->height, dst_format, SWS_BILINEAR,
                              nullptr, nullptr, nullptr);
       RETURN_IF_ERROR_LOG(ret, "Prepare image converter failed\n");
 
-      audio_codec_ctx = audio_codec.getCodecContext();
+      audio_codec_ctx = audio_codec.codec_context();
       int max_frames_size = audio_codec_ctx->sample_rate * 3; // 3s samples
       ret = audio_resampler.prepare(
           audio_codec_ctx->channels, audio_codec_ctx->channels,
@@ -75,7 +75,7 @@ namespace implayer
     static constexpr size_t VIDEO_PICTURE_QUEUE_SIZE = 2;
     static constexpr size_t AUDIO_FRAME_QUEUE_SIZE = 10;
 
-    FFmpegDmuxer demuxer;
+    FFmpegBaseDmuxer demuxer;
     FFmpegCodec video_codec;
     FFmpegCodec audio_codec;
     FFMPEGImageConverter img_conv;
@@ -86,8 +86,8 @@ namespace implayer
 
     AVStream *video_stream{nullptr};
     AVStream *audio_stream{nullptr};
-    AVCodecContext *audio_codec_ctx{nullptr};
-    AVCodecContext *video_codec_ctx{nullptr};
+    const AVCodecContext *audio_codec_ctx{nullptr};
+    const AVCodecContext *video_codec_ctx{nullptr};
 
     PacketQueue audio_packet_queue;
     WaitablePacketQueue audio_packet_sync_que;

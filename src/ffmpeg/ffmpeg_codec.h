@@ -59,10 +59,8 @@ namespace implayer
 
     void flush_buffers() { return avcodec_flush_buffers(codec_context_); }
 
-    const AVCodec *getCodec() const { return codec_; }
-    //  AVCodec *getCodec() { return codec_; }
-    const AVCodecContext *getCodecContext() const { return codec_context_; }
-    AVCodecContext *getCodecContext() { return codec_context_; }
+    const AVCodec *codec() const { return codec_; }
+    const AVCodecContext *codec_context() const { return codec_context_; }
 
   private:
     void close()
@@ -75,6 +73,6 @@ namespace implayer
     const AVCodec *codec_{nullptr};
     AVCodecContext *codec_context_{nullptr};
   };
-} // namespace implayer
+}
 
-#endif // IMPLAYER_FFMPEG_CODEC_H
+#endif

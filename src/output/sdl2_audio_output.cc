@@ -87,8 +87,7 @@ namespace implayer
     wanted_specs.callback = SDL2AudioOutput::sdl2AudioCallback;
     wanted_specs.userdata = this;
 
-    audio_device_id_ = SDL_OpenAudioDevice( // [1]
-        NULL, 0, &wanted_specs, &audio_spec_, 0);
+    audio_device_id_ = SDL_OpenAudioDevice(NULL, 0, &wanted_specs, &audio_spec_, 0);
 
     if (audio_device_id_ == 0)
     {

@@ -9,12 +9,6 @@
 
 namespace implayer
 {
-    enum class SourceType
-    {
-        UNKNOWN,
-        WEBSOCKET_FMP4,
-    };
-
     class SourceFactory : public Singleton<SourceFactory>
     {
     public:
@@ -27,7 +21,6 @@ namespace implayer
 
     public:
         std::shared_ptr<ISource> Create(SourceType source_type, IMPlayerSharedPtr player);
-        std::shared_ptr<ISource> CreateByPath(std::string path, IMPlayerSharedPtr player);
     };
 }
 
